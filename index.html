@@ -17,10 +17,13 @@
      BOTÓN DE MÚSICA (flotante, siempre visible)
      Reemplaza el src del <audio> con la canción elegida
 ============================================================ -->
-<audio id="bg-music" loop>
-  <!-- 🔊 PON AQUÍ EL LINK/ARCHIVO DE LA MÚSICA -->
-  <source src="assets/musica.mp3" type="audio/mpeg">
-</audio>
+<!-- ============================================================
+     MÚSICA — reproductor de YouTube oculto (controlado por el botón)
+     🎵 Video actual: https://www.youtube.com/watch?v=csG0LDsh2Xg
+     Para cambiar la canción, solo reemplaza el ID en script.js (YT_VIDEO_ID)
+============================================================ -->
+<div id="yt-player" style="position:absolute; width:0; height:0; overflow:hidden;"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
 <button id="music-toggle" class="music-btn" aria-label="Activar música">
   <span class="music-icon">♪</span>
   <span class="music-label">Música<br><em>Activar</em></span>
@@ -40,10 +43,10 @@
   <div class="book-wrap">
     <div id="book" class="book book--closed">
       <!-- Las 4 imágenes se superponen y se cruzan (crossfade) según el estado -->
-      <img class="book-img book-img--closed"  src="assets/book-closed.png"    alt="">
-      <img class="book-img book-img--hover"   src="assets/book-opening.png"   alt="">
-      <img class="book-img book-img--click1"  src="assets/book-half-open.png" alt="">
-      <img class="book-img book-img--open"    src="assets/book-open.png"      alt="">
+      <img class="book-img book-img--closed"  src="images/book-closed.png"    alt="">
+      <img class="book-img book-img--hover"   src="images/book-opening.png"   alt="">
+      <img class="book-img book-img--click1"  src="images/book-half-open.png" alt="">
+      <img class="book-img book-img--open"    src="images/book-open.png"      alt="">
 
       <!-- Texto que aparece SOLO cuando el libro está abierto del todo -->
       <div class="book-text">
@@ -74,7 +77,7 @@
   <header id="inicio" class="hero">
     <div class="hero__bg">
       <!-- 🖼️ FONDO: castillo + luna + noche estrellada, similar a la referencia -->
-      <img src="assets/hero-bg.png" alt="" class="hero__bg-img">
+      <img src="images/hero-bg.png" alt="" class="hero__bg-img">
       <div class="hero__gradient"></div>
     </div>
     <div class="petals-layer" aria-hidden="true"></div>
@@ -121,7 +124,7 @@
   <!-- ---------- CUENTA REGRESIVA ---------- -->
   <section id="cuenta" class="section section--countdown">
     <div class="section__bg">
-      <img src="assets/countdown-bg.png" alt="" class="section__bg-img">
+      <img src="images/countdown-bg.png" alt="" class="section__bg-img">
       <div class="section__gradient"></div>
     </div>
     <p class="section__eyebrow reveal-up">Faltan</p>
@@ -156,7 +159,7 @@
       <article id="ceremonia" class="event-card reveal-up">
         <div class="event-card__img">
           <!-- 🖼️ Foto de la iglesia/parroquia -->
-          <img src="assets/iglesia.png" alt="Parroquia San Juan María Vianney">
+          <img src="images/iglesia.png" alt="Parroquia San Juan María Vianney">
         </div>
         <div class="event-card__body">
           <h3 class="event-card__title">Ceremonia Religiosa</h3>
@@ -175,7 +178,7 @@
       <article id="recepcion" class="event-card reveal-up">
         <div class="event-card__img">
           <!-- 🖼️ Foto del local de recepción -->
-          <img src="assets/recepcion.png" alt="Castillo de Luna Recepciones">
+          <img src="images/recepcion.png" alt="Castillo de Luna Recepciones">
         </div>
         <div class="event-card__body">
           <h3 class="event-card__title">Recepción</h3>
@@ -200,7 +203,7 @@
       <article id="vestimenta" class="info-card reveal-up">
         <div class="info-card__img">
           <!-- 🖼️ Foto de outfit elegante (traje + vestido) -->
-          <img src="assets/vestimenta.png" alt="Código de vestimenta elegante">
+          <img src="images/vestimenta.png" alt="Código de vestimenta elegante">
         </div>
         <div class="info-card__body">
           <h3 class="info-card__title">Código de Vestimenta</h3>
@@ -244,7 +247,7 @@
   <!-- ---------- RSVP ---------- -->
   <section id="rsvp" class="section section--rsvp">
     <div class="section__bg">
-      <img src="assets/rsvp-bg.png" alt="" class="section__bg-img">
+      <img src="images/rsvp-bg.png" alt="" class="section__bg-img">
       <div class="section__gradient"></div>
     </div>
 
@@ -267,7 +270,7 @@
   <footer class="closing">
     <div class="section__bg">
       <!-- 🖼️ Fondo nocturno final (tren, faroles, como en la referencia) -->
-      <img src="assets/closing-bg.png" alt="" class="section__bg-img">
+      <img src="images/closing-bg.png" alt="" class="section__bg-img">
       <div class="section__gradient"></div>
     </div>
     <p class="closing__text reveal-up">
