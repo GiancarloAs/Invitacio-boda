@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
        - cuando la API esté lista creamos un YT.Player para poder controlar
          play/pause/unmute en clicks posteriores (unmute debe hacerse en respuesta
          a una interacción del usuario, por eso lo hacemos dentro del click).
-  ===================================================================== */
+   ===================================================================== */
   // 🎵 ID del video de YouTube (de la URL: youtube.com/watch?v=ESTE_ID)
   const YT_VIDEO_ID = 'csG0LDsh2Xg';
 
@@ -320,6 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const top = -8 - Math.random() * 12; // más arriba
       const opacity = 0.6 + Math.random() * 0.35;
 
+      // asegurar que cada pétalo sea posicionado respecto al contenedor fijo
+      petal.style.position = 'absolute';
       petal.style.left = `${left}%`;
       petal.style.top = `${top}%`;
       petal.style.width = `${size}px`;
@@ -332,10 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Creamos (o reutilizamos) un contenedor fijo en el <body> para que los pétalos no queden recortados.
+  let petalsRoot = document.getElementById('petals-root');
+  if (!petalsRoot){
+    petalsRoot = document.createElement('div');
+    petalsRoot.id = 'petals-root';
+    petalsRoot.className = 'petals-root';
+    // estilo inline para no depender de cambios en CSS externos
+    petalsRoot.style.position = 'fixed';
+    petalsRoot.style.top = '0';
+    petalsRoot.style.left = '0';
+    petalsRoot.style.right = '0';
+    petalsRoot.style.bottom = '0';
+    petalsRoot.style.pointerEvents = 'none';
+    petalsRoot.style.overflow = 'visible';
+    petalsRoot.style.zIndex = '9999';
+    document.body.appendChild(petalsRoot);
+  }
+
   document.querySelectorAll('.petals-layer').forEach(layer => {
     const isSparse = layer.classList.contains('petals-layer--sparse');
     // aumentar conteo para que se vean claramente
-    spawnPetals(layer, isSparse ? 10 : 18);
+    spawnPetals(petalsRoot, isSparse ? 10 : 18);
   });
 
   /* =====================================================================
