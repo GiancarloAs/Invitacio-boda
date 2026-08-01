@@ -154,10 +154,13 @@ button{ font-family: inherit; cursor:pointer; }
 .book-text{
   /* 📐 Ángulo y posición del texto sobre la hoja abierta.
      Ajusta --page-shift-x/-y para mover el bloque sin tocar el ángulo. */
-  --page-tilt: 12deg;
-  --page-tilt-origin: 52% 58%;
-  --page-shift-x: 6%;
-  --page-shift-y: -9%;
+  /* Ajustes actualizados: orientamos el texto hacia el otro lado,
+     lo elevamos y lo desplazamos hacia la derecha para encajar en
+     la hoja centrada de la imagen proporcionada. */
+  --page-tilt: -12deg;
+  --page-tilt-origin: 50% 50%;
+  --page-shift-x: 10%;
+  --page-shift-y: -16%;
 
   position:absolute; inset:0;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -706,6 +709,12 @@ button{ font-family: inherit; cursor:pointer; }
   .countdown{ gap: 10px; }
   .countdown__box{ min-width: 74px; padding: 16px 12px; }
   .countdown__number{ font-size: 1.8rem; }
+  /* Reducir desplazamiento/rotación en pantallas pequeñas */
+  .book-text{
+    --page-tilt: -8deg;
+    --page-shift-x: 6%;
+    --page-shift-y: -10%;
+  }
 }
 
 /* Foco visible para accesibilidad */
