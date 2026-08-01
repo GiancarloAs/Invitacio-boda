@@ -10,11 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const openLabel = document.getElementById('open-invite-label');
 
   let bookState = 'closed'; // closed -> hover -> click1 -> open
+  let particleShown = false; // mostrar la explosión solo la primera vez
 
   function setBookState(state){
     bookState = state;
     book.classList.remove('book--closed', 'book--hover', 'book--click1', 'book--open');
     book.classList.add(`book--${state}`);
+
+    // Si entramos en el estado entreabierto (click1) disparamos partículas
+    if (state === 'click1' && !particleShown){
+      spawnParticleExplosion(book, 26);
+      particleShown = true;
+    }
   }
 
   // Al pasar el mouse: closed -> hover (solo si aún no se ha hecho click)
@@ -339,7 +346,63 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =====================================================================
-     8) RSVP — placeholders de links (rellenar después)
+     8) EXPLOSIÓN DE PARTÍCULAS (estado click1 del libro)
+     - Crea elementos .particle dentro de un wrapper .particle-explosion
+     - Usa variables CSS --tx y --ty para mover cada partícula (keyframes en CSS)
+     - Respeta prefers-reduced-motion
+     ===================================================================== */
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function spawnParticleExplosion(parentEl, count = 20){
+    if (prefersReducedMotion) return; // no animar si el usuario lo pidió
+    if (!parentEl) return;
+
+    const explosion = document.createElement('div');
+    explosion.className = 'particle-explosion';
+    // posicionamos la explosión en la mitad superior del libro (ajustable)
+    explosion.style.left = '50%';
+    explosion.style.top = '30%';
+    explosion.style.transform = 'translate(-50%, -50%)';
+
+    for (let i = 0; i < count; i++){
+      const p = document.createElement('span');
+      p.className = 'particle';
+      // pequeña variación de color para dar calidez
+      const hue = 30 + Math.floor(Math.random() * 40); // 30-70
+      p.style.background = `radial-gradient(circle at 35% 35%, #fff, hsl(${hue} 90% 72% / 1) 30%, hsl(${hue} 80% 56% / 1) 60%, transparent 100%)`;
+      // origen en el centro del wrapper
+      p.style.left = '0px';
+      p.style.top = '0px';
+
+      // aleatorizar dirección y distancia
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 140; // px
+      const tx = Math.cos(angle) * distance + 'px';
+      const ty = Math.sin(angle) * distance + 'px';
+      p.style.setProperty('--tx', tx);
+      p.style.setProperty('--ty', ty);
+
+      // escalado y delay
+      const scale = 0.6 + Math.random() * 0.9;
+      p.style.transform = `translate3d(0,0,0) scale(${scale})`;
+      p.style.opacity = '1';
+      // escalonar un poco los inicios para aspecto orgánico
+      const delay = Math.random() * 160; // ms
+      p.style.animationDelay = `${delay}ms`;
+
+      explosion.appendChild(p);
+    }
+
+    parentEl.appendChild(explosion);
+
+    // limpiar pasado el tiempo de la animación (850ms + margen)
+    setTimeout(() => {
+      explosion.remove();
+    }, 1200);
+  }
+
+  /* =====================================================================
+     9) RSVP — placeholders de links (rellenar después)
      ===================================================================== */
   // 👉 Cuando tengas el link del Google Form, reemplaza aquí:
   const RSVP_FORM_URL = ''; // ej: 'https://forms.gle/xxxxxxxx'
@@ -356,8 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 👉 Cuando tengas los links de Google Maps, reemplaza aquí:
   const MAPS_LINKS = {
-    ceremonia: '', // ej: 'https://maps.app.goo.gl/xxxxx'
-    recepcion: ''
+    ceremonia: 'https://maps.app.goo.gl/QUQer9BckB35E4s37?g_st=iw', // Misa
+    recepcion: 'https://maps.app.goo.gl/GaWg98tGVmDsBt7g9?g_st=iw' // Fiesta
   };
   document.querySelectorAll('[data-maps-slot]').forEach(link => {
     const slot = link.dataset.mapsSlot;
