@@ -194,23 +194,54 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =====================================================================
-     6) BOTÓN DE MÚSICA
+     6) BOTÓN DE MÚSICA — YouTube IFrame Player (oculto)
      ===================================================================== */
-  const music = document.getElementById('bg-music');
+  // 🎵 ID del video de YouTube (de la URL: youtube.com/watch?v=ESTE_ID)
+  const YT_VIDEO_ID = 'csG0LDsh2Xg';
+
   const musicBtn = document.getElementById('music-toggle');
   const musicLabelEm = musicBtn.querySelector('em');
+  let ytPlayer = null;
+  let ytReady = false;
+  let wantsToPlay = false; // si el usuario pidió reproducir antes de que la API cargue
+
+  window.onYouTubeIframeAPIReady = function(){
+    ytPlayer = new YT.Player('yt-player', {
+      height: '0',
+      width: '0',
+      videoId: YT_VIDEO_ID,
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        loop: 1,
+        playlist: YT_VIDEO_ID // necesario para que loop:1 funcione
+      },
+      events: {
+        onReady: () => {
+          ytReady = true;
+          if (wantsToPlay) ytPlayer.playVideo();
+        }
+      }
+    });
+  };
 
   musicBtn.addEventListener('click', () => {
-    if (music.paused){
-      music.play().catch(() => {
-        // El navegador puede bloquear el autoplay hasta interacción; esto ya es interacción.
-      });
-      musicBtn.classList.add('is-playing');
-      musicLabelEm.textContent = 'Pausar';
-    } else {
-      music.pause();
+    if (!ytReady){
+      // La API aún está cargando: marcamos la intención y mostramos "activando"
+      wantsToPlay = !wantsToPlay;
+      musicBtn.classList.toggle('is-playing', wantsToPlay);
+      musicLabelEm.textContent = wantsToPlay ? 'Cargando…' : 'Activar';
+      return;
+    }
+    const state = ytPlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING){
+      ytPlayer.pauseVideo();
       musicBtn.classList.remove('is-playing');
       musicLabelEm.textContent = 'Activar';
+    } else {
+      ytPlayer.playVideo();
+      musicBtn.classList.add('is-playing');
+      musicLabelEm.textContent = 'Pausar';
     }
   });
 
@@ -269,3 +300,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
