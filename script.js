@@ -195,82 +195,147 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* =====================================================================
      6) BOTÓN DE MÚSICA — YouTube IFrame Player (oculto)
-     ===================================================================== */
+     Implementación más robusta:
+       - si la API aún no está lista, creamos un <iframe> con autoplay=1&mute=1
+         (los navegadores permiten autoplay si está silenciado). Esto inicia
+         la reproducción en "mute" inmediatamente.
+       - cuando la API esté lista creamos un YT.Player para poder controlar
+         play/pause/unmute en clicks posteriores (unmute debe hacerse en respuesta
+         a una interacción del usuario, por eso lo hacemos dentro del click).
+  ===================================================================== */
   // 🎵 ID del video de YouTube (de la URL: youtube.com/watch?v=ESTE_ID)
   const YT_VIDEO_ID = 'csG0LDsh2Xg';
 
   const musicBtn = document.getElementById('music-toggle');
   const musicLabelEm = musicBtn.querySelector('em');
   let ytPlayer = null;
-  let ytReady = false;
-  let wantsToPlay = false; // si el usuario pidió reproducir antes de que la API cargue
+  let createdIframe = false; // si creamos el iframe autoplay-muted como fallback
+  let mutedAutoplay = false; // indica que el iframe está reproduciendo en mute
 
+  function createIframeAutoplayMuted(){
+    const container = document.getElementById('yt-player');
+    if (!container) return;
+    // Si ya hay contenido, límpialo antes
+    container.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${YT_VIDEO_ID}?autoplay=1&mute=1&controls=0&loop=1&playlist=${YT_VIDEO_ID}&enablejsapi=1&playsinline=1&rel=0`;
+    iframe.width = '1'; iframe.height = '1';
+    iframe.setAttribute('allow', 'autoplay; encrypted-media;');
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.position = 'absolute';
+    iframe.style.pointerEvents = 'none';
+    container.appendChild(iframe);
+    createdIframe = true;
+    mutedAutoplay = true;
+  }
+
+  // La API de YouTube sigue cargándose de forma normal
   window.onYouTubeIframeAPIReady = function(){
-    ytPlayer = new YT.Player('yt-player', {
-      height: '0',
-      width: '0',
-      videoId: YT_VIDEO_ID,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        loop: 1,
-        playlist: YT_VIDEO_ID // necesario para que loop:1 funcione
-      },
-      events: {
-        onReady: () => {
-          ytReady = true;
-          if (wantsToPlay) ytPlayer.playVideo();
+    try{
+      ytPlayer = new YT.Player('yt-player', {
+        height: '0',
+        width: '0',
+        videoId: YT_VIDEO_ID,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          loop: 1,
+          playlist: YT_VIDEO_ID,
+          playsinline: 1
+        },
+        events: {
+          onReady: () => {
+            // Si ya habíamos iniciado la reproducción en mute con el iframe,
+            // intentamos sincronizar el player: reproducir y mantener mute.
+            if (mutedAutoplay && ytPlayer){
+              try{ ytPlayer.playVideo(); ytPlayer.mute(); }catch(e){ /* no crítico */ }
+            }
+          }
         }
-      }
-    });
+      });
+    }catch(e){
+      // si algo falla, no bloqueamos la página
+      console.warn('YT player init error', e);
+    }
   };
 
   musicBtn.addEventListener('click', () => {
-    if (!ytReady){
-      // La API aún está cargando: marcamos la intención y mostramos "activando"
-      wantsToPlay = !wantsToPlay;
-      musicBtn.classList.toggle('is-playing', wantsToPlay);
-      musicLabelEm.textContent = wantsToPlay ? 'Cargando…' : 'Activar';
-      return;
-    }
-    const state = ytPlayer.getPlayerState();
-    if (state === YT.PlayerState.PLAYING){
-      ytPlayer.pauseVideo();
-      musicBtn.classList.remove('is-playing');
-      musicLabelEm.textContent = 'Activar';
-    } else {
-      ytPlayer.playVideo();
+    // 1) no hay player (API no lista) y no hay iframe fallback: crear iframe autoplay muted
+    if (!ytPlayer && !createdIframe){
+      createIframeAutoplayMuted();
       musicBtn.classList.add('is-playing');
       musicLabelEm.textContent = 'Pausar';
+      return;
+    }
+
+    // 2) no hay player pero sí el iframe fallback (API aún pendiente): alternar removiendo/creando iframe
+    if (!ytPlayer && createdIframe){
+      const container = document.getElementById('yt-player');
+      if (musicBtn.classList.contains('is-playing')){
+        // detener -> quitar iframe
+        container.innerHTML = '';
+        createdIframe = false; mutedAutoplay = false;
+        musicBtn.classList.remove('is-playing');
+        musicLabelEm.textContent = 'Activar';
+      } else {
+        // iniciar -> volver a crear iframe
+        createIframeAutoplayMuted();
+        musicBtn.classList.add('is-playing');
+        musicLabelEm.textContent = 'Pausar';
+      }
+      return;
+    }
+
+    // 3) si el player existe, usamos la API para alternar play/pause y desmutear en interacción
+    if (ytPlayer){
+      const state = ytPlayer.getPlayerState();
+      if (state === YT.PlayerState.PLAYING){
+        ytPlayer.pauseVideo();
+        musicBtn.classList.remove('is-playing');
+        musicLabelEm.textContent = 'Activar';
+      } else {
+        // En respuesta a la interacción del usuario podemos desmutear
+        try{ ytPlayer.unMute(); }catch(e){}
+        ytPlayer.playVideo();
+        musicBtn.classList.add('is-playing');
+        musicLabelEm.textContent = 'Pausar';
+      }
     }
   });
 
   /* =====================================================================
-     7) PÉTALOS FLOTANTES (decoración ambiental)
+     7) PÉTALOS FLOTANTES (decoración ambiental) — mayor visibilidad
      ===================================================================== */
   function spawnPetals(container, count){
     if (!container) return;
     for (let i = 0; i < count; i++){
       const petal = document.createElement('span');
       petal.className = 'petal';
+      // arrancan por encima del viewport del contenedor
       const left = Math.random() * 100;
-      const duration = 9 + Math.random() * 10;
-      const delay = Math.random() * 10;
-      const size = 8 + Math.random() * 10;
-      const hue = Math.random() > 0.5 ? '' : 'filter: hue-rotate(20deg);';
+      const duration = 7 + Math.random() * 9; // algo más rápidos
+      const delay = Math.random() * 8;
+      const size = 10 + Math.random() * 16; // un poco más grandes
+      const top = -8 - Math.random() * 12; // más arriba
+      const opacity = 0.6 + Math.random() * 0.35;
+
       petal.style.left = `${left}%`;
+      petal.style.top = `${top}%`;
       petal.style.width = `${size}px`;
       petal.style.height = `${size}px`;
+      petal.style.opacity = String(opacity);
       petal.style.animationDuration = `${duration}s`;
       petal.style.animationDelay = `${delay}s`;
-      petal.style.cssText += hue;
+      petal.style.transform = `rotate(${Math.random() * 360}deg)`;
       container.appendChild(petal);
     }
   }
 
   document.querySelectorAll('.petals-layer').forEach(layer => {
     const isSparse = layer.classList.contains('petals-layer--sparse');
-    spawnPetals(layer, isSparse ? 6 : 12);
+    // aumentar conteo para que se vean claramente
+    spawnPetals(layer, isSparse ? 10 : 18);
   });
 
   /* =====================================================================
@@ -300,4 +365,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
-
