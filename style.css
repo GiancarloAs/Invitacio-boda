@@ -238,14 +238,18 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .open-invite-btn .deco{ color: var(--gold); }
 
-/* 🕯️ Brillo palpitante de la lámpara — solo visible cuando el libro está abierto.
-   Ajusta left/top/width/height para que quede exacto sobre tu lámpara real. */
+/* ================ MEJORAS AL BRILLO DE LA LÁMPARA ================
+   He reforzado la luz con capas adicionales y sombras para que sea
+   claramente visible aun cuando la imagen de fondo sea tenue.
+   También añadí un pulso más marcado y un par de pseudo-elementos
+   que añaden halos exteriores más suaves.
+================================================================== */
 .lamp-glow-wrap{
   position:absolute;
   left: 76%;
   top: 3%;
-  width: 20%;
-  height: 24%;
+  width: 28%;      /* aumenté el tamaño para que el halo cubra mejor */
+  height: 30%;
   opacity:0;
   transition: opacity 1s var(--ease) .5s;
   pointer-events:none;
@@ -253,20 +257,46 @@ button{ font-family: inherit; cursor:pointer; }
 .book.book--open .lamp-glow-wrap{ opacity:1; }
 
 .lamp-glow{
+  position:relative;
   width:100%; height:100%;
   border-radius:50%;
-  background: radial-gradient(circle, rgba(255,214,130,.6) 0%, rgba(255,180,90,.28) 42%, transparent 72%);
+  background: radial-gradient(circle at 45% 40%, rgba(255,230,150,.85) 0%, rgba(255,200,110,.52) 36%, rgba(255,170,80,.28) 58%, transparent 78%);
   mix-blend-mode: screen;
-  animation: lamp-flicker 2.8s ease-in-out infinite;
+  filter: blur(10px);
+  box-shadow:
+    0 0 18px rgba(255,214,130,.28),
+    0 0 42px rgba(255,180,90,.18),
+    0 10px 80px rgba(232,169,196,.06);
+  animation: lamp-flicker 2.6s ease-in-out infinite;
 }
+/* Capas extra: halo interno brillante y halo exterior muy suave */
+.lamp-glow::before,
+.lamp-glow::after{
+  content: '';
+  position:absolute; inset:0; border-radius:50%; pointer-events:none;
+}
+.lamp-glow::before{
+  background: radial-gradient(circle at 45% 40%, rgba(255,244,200,.85) 0%, rgba(255,220,140,.35) 40%, transparent 60%);
+  mix-blend-mode: screen;
+  transform: scale(.78);
+  filter: blur(2px);
+  opacity:.95;
+}
+.lamp-glow::after{
+  background: radial-gradient(circle, rgba(255,200,120,.26) 0%, transparent 45%);
+  transform: scale(1.25);
+  filter: blur(22px);
+  opacity:.88;
+}
+
 @keyframes lamp-flicker{
-  0%, 100%{ opacity:.55; transform: scale(1); }
-  12%{ opacity:.38; transform: scale(.95); }
-  27%{ opacity:.7;  transform: scale(1.06); }
-  41%{ opacity:.48; transform: scale(.99); }
-  56%{ opacity:.66; transform: scale(1.03); }
-  71%{ opacity:.42; transform: scale(.97); }
-  86%{ opacity:.6;  transform: scale(1.02); }
+  0%{ opacity:.8; transform: scale(1); }
+  10%{ opacity:.55; transform: scale(.97); }
+  25%{ opacity:1; transform: scale(1.06); }
+  40%{ opacity:.48; transform: scale(.95); }
+  60%{ opacity:.9; transform: scale(1.02); }
+  80%{ opacity:.6; transform: scale(.98); }
+  100%{ opacity:.85; transform: scale(1); }
 }
 
 /* =====================================================================
@@ -633,6 +663,36 @@ button{ font-family: inherit; cursor:pointer; }
   font-family: var(--font-script);
   font-size: 2.4rem;
   color: var(--gold-soft);
+}
+
+/* =====================================================================
+   EXPLOSIÓN DE PARTÍCULAS (para estado click1 del libro)
+   - Animación ligera, dispersión radial y desvanecimiento.
+   - Desactivada cuando el usuario prefiere reducir movimiento.
+   ===================================================================== */
+.particle-explosion{
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  width: 0; height: 0;
+}
+.particle{
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, rgba(255,240,200,1) 30%, rgba(255,200,120,1) 60%, transparent 100%);
+  opacity: 1;
+  transform: translate3d(0,0,0) scale(1);
+  will-change: transform, opacity;
+  animation: particle-move 850ms cubic-bezier(.15,.8,.3,1) forwards;
+}
+@keyframes particle-move{
+  to{ transform: translate3d(var(--tx), var(--ty), 0) scale(.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .particle{ animation-duration: 200ms !important; opacity: .9 !important; }
+  .lamp-glow{ animation: none !important; }
 }
 
 /* =====================================================================
