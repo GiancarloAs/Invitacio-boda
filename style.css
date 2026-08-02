@@ -196,6 +196,7 @@ button{ font-family: inherit; cursor:pointer; }
   line-height: 1.15;
   text-shadow: 0 1px 1px rgba(255,255,255,.4);
   letter-spacing: 0.02em;
+  transform: translateX(3mm);
 }
 .book-text__names{
   font-family: var(--font-script);
@@ -751,6 +752,9 @@ button{ font-family: inherit; cursor:pointer; }
   .countdown{ gap: 10px; }
   .countdown__box{ min-width: 74px; padding: 16px 12px; }
   .countdown__number{ font-size: 1.8rem; }
+  /* En móvil, la sombra blanca detrás de "Érase una vez..." se nota como
+     un fondo blanco poco elegante, así que se quita solo en pantallas chicas */
+  .book-text__title{ text-shadow: none; }
   /* En móvil "Dos caminos destinados a encontrarse" se parte en 2 líneas
      porque en una sola se hace muy larga */
   .eyebrow-break{ display:block; }
