@@ -576,7 +576,7 @@ button{ font-family: inherit; cursor:pointer; }
 .info-card__subtitle{
   font-family: var(--font-script);
   font-size: 1.5rem;
-  color: #b6467a;
+  color: #8f2d57;
   margin: 0 0 12px;
 }
 .event-card__name{
