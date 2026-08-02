@@ -181,6 +181,10 @@ button{ font-family: inherit; cursor:pointer; }
   margin: 0 0 12px;
   text-shadow: 0 1px 2px rgba(255,255,255,.35);
   font-weight: 600;
+  /* Se oculta visualmente pero conserva su espacio para que el título y
+     los nombres no cambien de posición */
+  opacity: 0;
+  pointer-events: none;
 }
 .eyebrow-break{ display:none; }
 .book-text__title{
@@ -349,6 +353,13 @@ button{ font-family: inherit; cursor:pointer; }
   text-transform: uppercase;
   color: var(--rose);
   margin: 0 0 10px;
+}
+.hero__label-line{
+  display:block;
+  width: 42px;
+  height: 1px;
+  margin: -2px auto 20px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
 }
 .hero__names{
   font-family: var(--font-script);
