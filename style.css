@@ -1,341 +1,765 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daniela &amp; Rodrigo — 10 de Octubre 2026</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<!-- ============================================================
-     BOTÓN DE MÚSICA (flotante, siempre visible)
-     Reproductor de audio HTML5 oculto
-============================================================ -->
-<audio id="bg-music" preload="auto" loop>
-  <source src="music.mp3" type="audio/mpeg">
-  Tu navegador no soporta audio HTML5
-</audio>
-
-<button id="music-toggle" class="music-btn" aria-label="Activar música">
-  <span class="music-icon">♪</span>
-  <span class="music-label">Música<br><em>Activar</em></span>
-</button>
-
-<script>
 /* =====================================================================
-   MÚSICA — implementación autónoma, no depende de script.js.
-   Se ejecuta apenas el navegador llega a este punto del HTML, ya que
-   el <audio> y el <button> de arriba ya existen en el DOM en ese momento.
-   Si algo falla, queda claramente registrado en la consola (F12).
+   TOKENS — paleta "cuento de hadas nocturno"
    ===================================================================== */
-(function(){
-  var musicBtn = document.getElementById('music-toggle');
-  var bgMusic  = document.getElementById('bg-music');
+:root{
+  --midnight-deep:   #150c2b;
+  --midnight:        #221646;
+  --violet:          #4a2f7d;
+  --lilac:           #b79bdb;
+  --rose:            #e8a9c4;
+  --gold:            #d7b46a;
+  --gold-soft:       #f0dba8;
+  --parchment:       #f4ecd8;
+  --parchment-dark:  #e3d3ab;
+  --ink:             #2c1c46;
+  --white:           #faf6ec;
 
-  if (!musicBtn){ console.error('[Música] No se encontró #music-toggle en el HTML.'); return; }
-  if (!bgMusic){  console.error('[Música] No se encontró #bg-music en el HTML.'); return; }
+  --font-script: 'Great Vibes', cursive;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-label: 'Cinzel', serif;
 
-  var musicLabelEm = musicBtn.querySelector('em');
+  --shadow-soft: 0 10px 30px rgba(21, 12, 43, 0.35);
+  --shadow-strong: 0 20px 60px rgba(21, 12, 43, 0.55);
 
-  bgMusic.loop = true;
-  bgMusic.volume = 0.6;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
 
-  console.log('[Música] Inicializado. src=' + (bgMusic.currentSrc || bgMusic.querySelector('source').src)
-    + ' | networkState=' + bgMusic.networkState + ' | readyState=' + bgMusic.readyState);
+*{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
 
-  bgMusic.addEventListener('error', function(){
-    var err = bgMusic.error;
-    var codeMsg = err ? ('código ' + err.code) : 'sin detalle';
-    console.error('[Música] El archivo de audio no cargó (' + codeMsg + ').');
-    console.error('[Música] Revisa: 1) que "music.mp3" esté en la MISMA carpeta que index.html, '
-      + '2) que el nombre coincida EXACTO en mayúsculas/minúsculas, '
-      + '3) que el archivo haya sido subido (git push) al repositorio, no solo guardado en tu compu.');
-  });
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+  *{ animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 
-  musicBtn.addEventListener('click', function(){
-    console.log('[Música] Click detectado. paused=' + bgMusic.paused
-      + ' readyState=' + bgMusic.readyState
-      + ' error=' + (bgMusic.error ? bgMusic.error.code : 'ninguno'));
+body{
+  margin:0;
+  background: var(--midnight-deep);
+  color: var(--white);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+}
 
-    if (bgMusic.paused){
-      var playPromise = bgMusic.play();
-      if (playPromise && typeof playPromise.then === 'function'){
-        playPromise.then(function(){
-          musicBtn.classList.add('is-playing');
-          if (musicLabelEm) musicLabelEm.textContent = 'Pausar';
-        }).catch(function(err){
-          console.error('[Música] play() fue rechazado: ' + err.name + ' — ' + err.message);
-          musicBtn.classList.remove('is-playing');
-          if (musicLabelEm) musicLabelEm.textContent = 'Activar';
-        });
-      }
-    } else {
-      bgMusic.pause();
-      musicBtn.classList.remove('is-playing');
-      if (musicLabelEm) musicLabelEm.textContent = 'Activar';
-    }
-  });
-})();
-</script>
+img{ max-width:100%; display:block; }
 
-<!-- ============================================================
-     PANTALLA 1 — EL LIBRO (portada / intro)
-     4 estados controlados por CSS + JS:
-       .book--closed   -> book-closed.jpg     (reposo)
-       .book--hover    -> book-opening.jpg    (mouse encima)
-       .book--click1   -> book-half-open.jpg  (primer click)
-       .book--open     -> book-open.jpg       (segundo click, texto aparece)
-============================================================ -->
-<section id="book-screen" class="book-screen">
-  <div class="petals-layer" aria-hidden="true"></div>
+a{ color:inherit; text-decoration:none; }
+button{ font-family: inherit; cursor:pointer; }
 
-  <div class="book-wrap">
-    <div id="book" class="book book--closed">
-      <!-- Las 4 imágenes se superponen y se cruzan (crossfade) según el estado -->
-      <img class="book-img book-img--closed"  src="images/book-closed.jpg"    alt="">
-      <img class="book-img book-img--hover"   src="images/book-opening.jpg"   alt="">
-      <img class="book-img book-img--click1"  src="images/book-half-open.jpg" alt="">
-      <img class="book-img book-img--open"    src="images/book-open.jpg"      alt="">
+::selection{ background: var(--rose); color: var(--ink); }
 
-      <!-- Texto que aparece SOLO cuando el libro está abierto del todo -->
-      <div class="book-text">
-        <p class="book-text__eyebrow">Dos caminos destinados a encontrarse</p>
-        <h1 class="book-text__title">Érase una vez...</h1>
-        <p class="book-text__names">Daniela &amp; Rodrigo</p>
-      </div>
+/* =====================================================================
+   BOTÓN DE MÚSICA
+   ===================================================================== */
+.music-btn{
+  position: fixed;
+  top: 20px; right: 20px;
+  z-index: 500;
+  display:flex; align-items:center; gap:8px;
+  background: rgba(244,236,216,0.92);
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: .04em;
+  box-shadow: var(--shadow-soft);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.music-btn:hover{ transform: translateY(-2px) scale(1.04); box-shadow: var(--shadow-strong); }
+.music-icon{ font-size: 16px; }
+.music-label em{ font-style: normal; color: var(--violet); display:block; }
+.music-btn.is-playing .music-icon{ animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.25);} }
 
-      <!-- 🕯️ Brillo palpitante de la lámpara (solo visible en el estado "open") -->
-      <div class="lamp-glow-wrap" aria-hidden="true">
-        <div class="lamp-glow"></div>
-      </div>
-    </div>
+/* =====================================================================
+   PÉTALOS AMBIENTALES (decoración sutil y continua)
+   ===================================================================== */
+.petals-layer{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index: 2; }
+.petals-layer--sparse{ opacity:.6; }
+.petal{
+  position:absolute; top:-5%;
+  width: 14px; height: 14px;
+  background: radial-gradient(circle at 30% 30%, var(--rose), transparent 70%);
+  border-radius: 60% 40% 60% 40%;
+  opacity:.7;
+  animation: fall linear infinite;
+}
+@keyframes fall{
+  0%{ transform: translateY(-10vh) translateX(0) rotate(0deg); }
+  100%{ transform: translateY(110vh) translateX(40px) rotate(360deg); }
+}
 
-    <button id="open-invite-btn" class="open-invite-btn">
-      <span id="open-invite-label">Abrir invitación</span> <span class="deco">✦</span>
-    </button>
-  </div>
-</section>
+/* =====================================================================
+   PANTALLA 1 — EL LIBRO
+   ===================================================================== */
+.book-screen{
+  position: fixed; inset:0;
+  z-index: 400;
+  display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(183,155,219,.18), transparent 60%),
+    linear-gradient(180deg, #1c1236 0%, #0f0a1f 100%);
+  transition: opacity 1s var(--ease), visibility 1s var(--ease);
+}
+.book-screen.is-hidden{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
 
-<!-- ============================================================
-     CONTENIDO PRINCIPAL DE LA INVITACIÓN
-     (oculto hasta que el libro se abre del todo)
-============================================================ -->
-<main id="invitation" class="invitation" aria-hidden="true">
+.book-wrap{
+  display:flex; flex-direction:column; align-items:center;
+  gap: 28px;
+  padding: 24px;
+}
 
-  <!-- ---------- HERO ---------- -->
-  <header id="inicio" class="hero">
-    <div class="hero__bg">
-      <!-- 🖼️ FONDO: castillo + luna + noche estrellada, similar a la referencia -->
-      <img src="images/hero-bg.jpg" alt="" class="hero__bg-img">
-      <div class="hero__gradient"></div>
-    </div>
-    <div class="petals-layer" aria-hidden="true"></div>
+.book{
+  position:relative;
+  width: min(88vw, 620px);
+  aspect-ratio: 1/1;
+  border-radius: 10px;
+  overflow:hidden;
+  box-shadow: var(--shadow-strong);
+  cursor:pointer;
+  transition: transform .5s var(--ease);
+}
+.book:hover{ transform: scale(1.015); }
 
-    <p class="hero__note reveal-up">Con mucho amor,<br>te invitamos a celebrar<br>nuestro matrimonio ♡</p>
+.book-img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit: cover;
+  opacity:0;
+  transition: opacity .9s var(--ease);
+}
+/* Estado base: libro cerrado visible */
+.book-img--closed{ opacity:1; }
 
-    <div class="hero__center">
-      <p class="hero__label reveal-up">Nuestra boda</p>
-      <h1 class="hero__names">
-        <span class="letters" data-text="Daniela">Daniela</span>
-        <span class="hero__amp">&amp;</span>
-        <span class="letters" data-text="Rodrigo">Rodrigo</span>
-      </h1>
-      <p class="hero__date reveal-up">10 de octubre de 2026</p>
-    </div>
+/* --hover: sobre "opening" */
+.book.book--hover .book-img--closed{ opacity:0; }
+.book.book--hover .book-img--hover{ opacity:1; }
 
-    <!-- ---------- NAV / BOTONES DE SECCIÓN ---------- -->
-    <nav class="nav-scroll" aria-label="Secciones de la invitación">
-      <a href="#historia"    class="nav-item"><img class="nav-icon" src="images/iconosboda.png" alt="">Nuestra Historia</a>
-      <a href="#cuenta"      class="nav-item"><img class="nav-icon" src="images/icontador.png" alt="">Cuenta Regresiva</a>
-      <a href="#ceremonia"   class="nav-item"><img class="nav-icon" src="images/iiglesia.png" alt="">Ceremonia</a>
-      <a href="#recepcion"   class="nav-item"><img class="nav-icon" src="images/icastillo.png" alt="">Recepción</a>
-      <a href="#vestimenta"  class="nav-item"><img class="nav-icon" src="images/ivestimenta.png" alt="">Código de Vestimenta</a>
-      <a href="#regalos"     class="nav-item"><img class="nav-icon" src="images/iregalos.png" alt="">Mesa de Regalos</a>
-      <a href="#rsvp"        class="nav-item"><img class="nav-icon" src="images/iconfirmar.png" alt="">RSVP</a>
-    </nav>
-  </header>
+/* --click1: entreabierto */
+.book.book--click1 .book-img--closed,
+.book.book--click1 .book-img--hover{ opacity:0; }
+.book.book--click1 .book-img--click1{ opacity:1; }
 
-  <!-- ---------- NUESTRA HISTORIA ---------- -->
-  <section id="historia" class="section section--historia">
-    <div class="petals-layer petals-layer--sparse" aria-hidden="true"></div>
-    <p class="section__eyebrow reveal-up">Capítulo uno</p>
-    <h2 class="section__title reveal-up">Nuestra Historia</h2>
-    <div class="historia__body reveal-up">
-      <!-- ✍️ TEXTO: cuéntanos cómo se conocieron Daniela y Rodrigo -->
-      <p>
-        [Aquí va el texto de la historia de Daniela &amp; Rodrigo — cómo se conocieron,
-        su primera cita, la propuesta... Envíame el contenido y lo redacto con el mismo
-        tono de cuento de hadas del resto de la invitación.]
-      </p>
-    </div>
-  </section>
+/* --open: abierto del todo + texto aparece */
+.book.book--open .book-img--closed,
+.book.book--open .book-img--hover,
+.book.book--open .book-img--click1{ opacity:0; }
+.book.book--open .book-img--open{ opacity:1; }
 
-  <!-- ---------- CUENTA REGRESIVA ---------- -->
-  <section id="cuenta" class="section section--countdown">
-    <div class="section__bg">
-      <img src="images/countdown-bg.jpg" alt="" class="section__bg-img">
-      <div class="section__gradient"></div>
-    </div>
-    <p class="section__eyebrow reveal-up">Faltan</p>
-    <h2 class="section__title reveal-up">Para nuestro gran día</h2>
+.book-text{
+  /* 📐 Ajustado al ángulo real de la hoja en book-open.jpg */
+  --page-tilt: -11deg;
+  --page-tilt-origin: 50% 50%;
+  --page-shift-x: -7%;
+  --page-shift-y: -9%;
 
-    <div class="countdown reveal-up" id="countdown"
-         data-event-date="2026-10-10T19:00:00-05:00">
-      <!-- 📅 Fecha/hora del evento en data-event-date arriba (ISO 8601, zona horaria Perú -05:00) -->
-      <div class="countdown__box">
-        <span class="countdown__number" id="cd-days">000</span>
-        <span class="countdown__label">Días</span>
-      </div>
-      <div class="countdown__box">
-        <span class="countdown__number" id="cd-hours">00</span>
-        <span class="countdown__label">Horas</span>
-      </div>
-      <div class="countdown__box">
-        <span class="countdown__number" id="cd-minutes">00</span>
-        <span class="countdown__label">Minutos</span>
-      </div>
-      <div class="countdown__box">
-        <span class="countdown__number" id="cd-seconds">00</span>
-        <span class="countdown__label">Segundos</span>
-      </div>
-    </div>
-  </section>
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  padding: 40px 30px;
+  opacity:0;
+  transform: translate(var(--page-shift-x), var(--page-shift-y)) rotate(var(--page-tilt));
+  transform-origin: var(--page-tilt-origin);
+  transition: opacity .5s var(--ease) .15s;
+  pointer-events:none;
+}
+.book.book--open .book-text{ opacity:1; }
 
-  <!-- ---------- CEREMONIA Y RECEPCIÓN ---------- -->
-  <section id="ceremonia-recepcion" class="section section--cards">
-    <div class="cards-grid">
+.book-text__eyebrow{
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #2d1a4d;
+  margin: 0 0 12px;
+  text-shadow: 0 1px 2px rgba(255,255,255,.35);
+  font-weight: 600;
+}
+.book-text__title{
+  font-family: var(--font-script);
+  font-size: clamp(1.7rem, 6vw, 2.7rem);
+  white-space: nowrap;
+  color: #5c2e91;
+  margin: 0 0 8px;
+  line-height: 1.15;
+  text-shadow: 0 1px 1px rgba(255,255,255,.4);
+  letter-spacing: 0.02em;
+}
+.book-text__names{
+  font-family: var(--font-script);
+  font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+  letter-spacing: .04em;
+  text-transform: none;
+  color: #4a2f7d;
+  margin: 8px 0 0;
+  text-shadow: 0 1px 1px rgba(255,255,255,.4);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: color .4s var(--ease), text-shadow .4s var(--ease);
+}
+.book-text__names:hover{
+  color: #a8790f;
+  text-shadow:
+    0 0 10px rgba(255,215,0,.7),
+    0 0 24px rgba(255,215,0,.45);
+}
 
-      <article id="ceremonia" class="event-card reveal-up">
-        <div class="event-card__img">
-          <!-- 🖼️ Foto de la iglesia/parroquia -->
-          <img src="images/iglesia.jpg" alt="Parroquia San Juan María Vianney">
-        </div>
-        <div class="event-card__body">
-          <h3 class="event-card__title">Ceremonia Religiosa</h3>
-          <p class="event-card__name">Parroquia<br>"San Juan María Vianney"</p>
-          <ul class="event-card__meta">
-            <li>📅 10 de octubre de 2026</li>
-            <li>🕖 7:00 p.m.</li>
-          </ul>
-          <!-- 📍 LINK DE GOOGLE MAPS DE LA IGLESIA -->
-          <a href="#" class="event-card__btn" target="_blank" rel="noopener" data-maps-slot="ceremonia">
-            📍 Cómo llegar
-          </a>
-        </div>
-      </article>
+/* Letras que "se escriben" con difuminado al abrir el libro */
+.blur-char{
+  display:inline-block;
+  opacity:0;
+  filter: blur(9px);
+  animation: blur-write .65s var(--ease) forwards;
+}
+@keyframes blur-write{
+  to{ opacity:1; filter: blur(0); }
+}
 
-      <article id="recepcion" class="event-card reveal-up">
-        <div class="event-card__img">
-          <!-- 🖼️ Foto del local de recepción -->
-          <img src="images/recepcion.jpg" alt="Castillo de Luna Recepciones">
-        </div>
-        <div class="event-card__body">
-          <h3 class="event-card__title">Recepción</h3>
-          <p class="event-card__name">Castillo de Luna Recepciones</p>
-          <ul class="event-card__meta">
-            <li>📍 Avenida Algarrobos lote 23, Pimentel</li>
-          </ul>
-          <!-- 📍 LINK DE GOOGLE MAPS DEL LOCAL -->
-          <a href="#" class="event-card__btn" target="_blank" rel="noopener" data-maps-slot="recepcion">
-            📍 Cómo llegar
-          </a>
-        </div>
-      </article>
+.open-invite-btn{
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-family: var(--font-label);
+  font-size: 13px;
+  letter-spacing: .08em;
+  display:flex; align-items:center; gap:10px;
+  box-shadow: var(--shadow-soft);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease), letter-spacing .35s var(--ease);
+}
+.open-invite-btn:hover{
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-strong);
+  letter-spacing: .12em;
+}
+.open-invite-btn .deco{ color: var(--gold); }
 
-    </div>
-  </section>
+/* ================ MEJORAS AL BRILLO DE LA LÁMPARA ================
+   He reforzado la luz con capas adicionales y sombras para que sea
+   claramente visible aun cuando la imagen de fondo sea tenue.
+   También añadí un pulso más marcado y un par de pseudo-elementos
+   que añaden halos exteriores más suaves.
+================================================================== */
+.lamp-glow-wrap{
+  position:absolute;
+  left: 76%;
+  top: 3%;
+  width: 28%;      /* aumenté el tamaño para que el halo cubra mejor */
+  height: 30%;
+  opacity:0;
+  transition: opacity 1s var(--ease) .5s;
+  pointer-events:none;
+}
+.book.book--open .lamp-glow-wrap{ opacity:1; }
 
-  <!-- ---------- VESTIMENTA Y REGALOS ---------- -->
-  <section id="vestimenta-regalos" class="section section--cards">
-    <div class="cards-grid">
+.lamp-glow{
+  position:relative;
+  width:100%; height:100%;
+  border-radius:50%;
+  background: radial-gradient(circle at 45% 40%, rgba(255,230,150,.85) 0%, rgba(255,200,110,.52) 36%, rgba(255,170,80,.28) 58%, transparent 78%);
+  mix-blend-mode: screen;
+  filter: blur(10px);
+  box-shadow:
+    0 0 18px rgba(255,214,130,.28),
+    0 0 42px rgba(255,180,90,.18),
+    0 10px 80px rgba(232,169,196,.06);
+  animation: lamp-flicker 2.6s ease-in-out infinite;
+}
+/* Capas extra: halo interno brillante y halo exterior muy suave */
+.lamp-glow::before,
+.lamp-glow::after{
+  content: '';
+  position:absolute; inset:0; border-radius:50%; pointer-events:none;
+}
+.lamp-glow::before{
+  background: radial-gradient(circle at 45% 40%, rgba(255,244,200,.85) 0%, rgba(255,220,140,.35) 40%, transparent 60%);
+  mix-blend-mode: screen;
+  transform: scale(.78);
+  filter: blur(2px);
+  opacity:.95;
+}
+.lamp-glow::after{
+  background: radial-gradient(circle, rgba(255,200,120,.26) 0%, transparent 45%);
+  transform: scale(1.25);
+  filter: blur(22px);
+  opacity:.88;
+}
 
-      <article id="vestimenta" class="info-card reveal-up">
-        <div class="info-card__img">
-          <!-- 🖼️ Foto de outfit elegante (traje + vestido) -->
-          <img src="images/vestimenta.jpg" alt="Código de vestimenta elegante">
-        </div>
-        <div class="info-card__body">
-          <h3 class="info-card__title">Código de Vestimenta</h3>
-          <p class="info-card__subtitle">Elegante</p>
-          <p class="info-card__text">
-            Para conservar la armonía de nuestra celebración, agradecemos evitar
-            prendas en color blanco, beige o tonos similares, reservados para la novia.
-          </p>
-        </div>
-      </article>
+@keyframes lamp-flicker{
+  0%{ opacity:.8; transform: scale(1); }
+  10%{ opacity:.55; transform: scale(.97); }
+  25%{ opacity:1; transform: scale(1.06); }
+  40%{ opacity:.48; transform: scale(.95); }
+  60%{ opacity:.9; transform: scale(1.02); }
+  80%{ opacity:.6; transform: scale(.98); }
+  100%{ opacity:.85; transform: scale(1); }
+}
 
-      <article id="regalos" class="info-card reveal-up">
-        <div class="info-card__body info-card__body--full">
-          <h3 class="info-card__title">🎁 Mesa de Regalos</h3>
-          <p class="info-card__text">
-            Tu presencia es nuestro mejor regalo. Si deseas tener un detalle con
-            nosotros, puedes hacerlo mediante:
-          </p>
-          <div class="gift-block">
-            <p class="gift-block__label">Interbank</p>
-            <div class="gift-block__row">
-              <!-- 💳 NÚMERO DE CUENTA -->
-              <span class="gift-block__value" data-copy="100-3339007479">100-3339007479</span>
-              <button class="copy-btn" data-copy-target>Copiar</button>
-            </div>
-          </div>
-          <div class="gift-block">
-            <p class="gift-block__label">CCI</p>
-            <div class="gift-block__row">
-              <!-- 💳 CCI -->
-              <span class="gift-block__value" data-copy="003-100-013339007479-56">003-100-013339007479-56</span>
-              <button class="copy-btn" data-copy-target>Copiar</button>
-            </div>
-          </div>
-        </div>
-      </article>
+/* =====================================================================
+   CONTENIDO PRINCIPAL
+   ===================================================================== */
+.invitation{ position:relative; z-index:1; }
+.invitation[aria-hidden="true"]{ display:none; }
 
-    </div>
-  </section>
+.section__bg, .hero__bg{
+  position:absolute; inset:0; z-index:0; overflow:hidden;
+}
+.section__bg-img, .hero__bg-img{
+  width:100%; height:100%; object-fit:cover;
+}
+.section__gradient, .hero__gradient{
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(21,12,43,.55) 0%, rgba(21,12,43,.85) 100%);
+}
 
-  <!-- ---------- RSVP ---------- -->
-  <section id="rsvp" class="section section--rsvp">
-    <div class="section__bg">
-      <img src="images/rsvp-bg.jpg" alt="" class="section__bg-img">
-      <div class="section__gradient"></div>
-    </div>
+/* =====================================================================
+   HERO
+   ===================================================================== */
+.hero{
+  position:relative;
+  min-height: 100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  padding: 100px 20px 40px;
+  overflow:hidden;
+}
+.hero__note{
+  position: relative; z-index:1;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gold-soft);
+  margin-bottom: 40px;
+  max-width: 320px;
+}
+.hero__center{ position:relative; z-index:1; }
+.hero__label{
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin: 0 0 10px;
+}
+.hero__names{
+  font-family: var(--font-script);
+  font-size: clamp(3.2rem, 11vw, 6.5rem);
+  font-weight: 400;
+  color: var(--white);
+  margin: 0;
+  line-height: 1.1;
+  text-shadow: 0 0 40px rgba(183,155,219,.5), 0 6px 30px rgba(0,0,0,.5);
+}
+.hero__amp{
+  display:inline-block;
+  font-size: .55em;
+  color: var(--gold-soft);
+  margin: 0 8px;
+  vertical-align: middle;
+}
+.hero__date{
+  font-family: var(--font-label);
+  font-size: 14px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 18px;
+}
 
-    <p class="section__eyebrow reveal-up">Confirma tu asistencia</p>
-    <h2 class="section__title reveal-up">Tu presencia hará este día<br>aún más especial para nosotros</h2>
+/* Animación letra por letra para los nombres */
+.letters{ display:inline-block; }
+.letters .char{
+  display:inline-block;
+  opacity:0;
+  transform: translateY(18px);
+  animation: letter-in .7s var(--ease) forwards;
+}
+@keyframes letter-in{
+  to{ opacity:1; transform: translateY(0); }
+}
 
-    <div class="rsvp__actions reveal-up">
-      <!-- ✅ LINK AL GOOGLE FORM DE CONFIRMACIÓN -->
-      <a href="#" id="rsvp-form-link" class="rsvp-btn rsvp-btn--primary" target="_blank" rel="noopener">
-        ✉️ Confirmar asistencia
-      </a>
-      <!-- 📱 LINK DE WHATSAPP: https://wa.me/51XXXXXXXXX?text=... -->
-      <a href="#" id="rsvp-whatsapp-link" class="rsvp-btn rsvp-btn--whatsapp" target="_blank" rel="noopener">
-        <span class="wa-icon">✆</span> Confirmar por WhatsApp
-      </a>
-    </div>
-  </section>
+.nav-scroll{
+  position:relative; z-index:1;
+  display:flex; flex-wrap:wrap; justify-content:center; gap: 10px;
+  margin-top: 50px;
+  max-width: 900px;
+  background: rgba(244,236,216,.08);
+  border: 1px solid rgba(215,180,106,.35);
+  backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+.nav-item{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--white);
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: transform .3s var(--ease), background .3s var(--ease), color .3s var(--ease);
+}
+.nav-icon{ width: 26px; height: 26px; object-fit: contain; }
+.nav-item:hover{
+  transform: translateY(-4px);
+  background: rgba(215,180,106,.16);
+  color: var(--gold-soft);
+}
 
-  <!-- ---------- CIERRE / AGRADECIMIENTO ---------- -->
-  <footer class="closing">
-    <div class="section__bg">
-      <!-- 🖼️ Fondo nocturno final (tren, faroles, como en la referencia) -->
-      <img src="images/closing-bg.jpg" alt="" class="section__bg-img">
-      <div class="section__gradient"></div>
-    </div>
-    <p class="closing__text reveal-up">
-      Gracias por ser parte del<br>capítulo más hermoso de nuestra historia.
-    </p>
-    <p class="closing__names reveal-up">Daniela &amp; Rodrigo</p>
-  </footer>
+/* =====================================================================
+   SECCIONES GENERALES
+   ===================================================================== */
+.section{
+  position:relative;
+  padding: 100px 20px;
+  text-align:center;
+  overflow:hidden;
+}
+.section--historia{ background: var(--midnight); }
+.section--countdown, .section--rsvp{ min-height: 70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+/* Reduce vertical padding for .section--cards on desktop so consecutive
+   card sections can appear as a single block (keeps spacing similar to cards gap) */
+.section--cards{ background: var(--midnight-deep); padding: 28px 20px; }
+/* If two .section--cards are consecutive, remove the top padding on the second
+   so the inner card-to-card spacing matches the grid gap (28px) */
+.section--cards + .section--cards{ padding-top: 0; }
 
-</main>
+.section__eyebrow{
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin: 0 0 12px;
+  position:relative; z-index:1;
+}
+.section__title{
+  font-family: var(--font-script);
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  font-weight:400;
+  color: var(--white);
+  margin: 0 0 30px;
+  position:relative; z-index:1;
+}
 
-<script src="script.js"></script>
-</body>
-</html>
+.historia__body{
+  max-width: 640px;
+  margin: 0 auto;
+  font-size: 18px;
+  line-height: 1.9;
+  color: var(--parchment);
+  font-style: italic;
+  position:relative; z-index:1;
+}
+
+/* =====================================================================
+   REVEAL ON SCROLL (fade + up)
+   ===================================================================== */
+.reveal-up{
+  opacity:0;
+  transform: translateY(28px);
+  transition: opacity .9s var(--ease), transform .9s var(--ease);
+}
+.reveal-up.is-visible{
+  opacity:1;
+  transform: translateY(0);
+}
+
+/* =====================================================================
+   CUENTA REGRESIVA
+   ===================================================================== */
+.countdown{
+  position:relative; z-index:1;
+  display:flex; gap: 16px; flex-wrap:wrap; justify-content:center;
+}
+.countdown__box{
+  background: rgba(244,236,216,.92);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 22px 22px;
+  min-width: 92px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--gold);
+  transition: transform .4s var(--ease), box-shadow .4s var(--ease);
+}
+.countdown__box:hover{
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: var(--shadow-strong);
+}
+.countdown__number{
+  display:block;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--violet);
+  font-variant-numeric: tabular-nums;
+}
+.countdown__label{
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* =====================================================================
+   TARJETAS (ceremonia / recepción / vestimenta / regalos)
+   ===================================================================== */
+.cards-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+@media (max-width: 780px){
+  .cards-grid{ grid-template-columns: 1fr; }
+}
+
+.event-card, .info-card{
+  background: var(--parchment);
+  color: var(--ink);
+  border-radius: 18px;
+  overflow:hidden;
+  text-align:left;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--parchment-dark);
+  transition: transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+.event-card:hover, .info-card:hover{
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-strong);
+}
+.event-card__img, .info-card__img{ height: 220px; overflow:hidden; }
+.event-card__img img, .info-card__img img{
+  width:100%; height:100%; object-fit:cover;
+  transition: transform .8s var(--ease);
+}
+.event-card:hover .event-card__img img,
+.info-card:hover .info-card__img img{ transform: scale(1.08); }
+
+.event-card__body, .info-card__body{ padding: 26px 26px 30px; }
+.info-card__body--full{ padding: 30px 26px; }
+
+.event-card__title, .info-card__title{
+  font-family: var(--font-script);
+  font-size: 1.9rem;
+  color: var(--violet);
+  margin: 0 0 6px;
+}
+.info-card__subtitle{
+  font-family: var(--font-script);
+  font-size: 1.5rem;
+  color: var(--rose);
+  margin: 0 0 12px;
+}
+.event-card__name{
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  line-height:1.4;
+}
+.event-card__meta{
+  list-style:none; margin:0 0 20px; padding:0;
+  font-size: 14px; line-height: 1.9;
+  color: #4a3a2e;
+}
+.event-card__btn{
+  display:inline-block;
+  background: var(--violet);
+  color: var(--white);
+  font-family: var(--font-label);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  padding: 11px 20px;
+  border-radius: 999px;
+  transition: transform .3s var(--ease), background .3s var(--ease);
+}
+.event-card__btn:hover{
+  transform: translateY(-2px);
+  background: var(--midnight);
+}
+
+.info-card__text{
+  font-size: 15px;
+  line-height: 1.8;
+  color: #4a3a2e;
+}
+
+.gift-block{ margin-top: 18px; }
+.gift-block__label{
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin: 0 0 6px;
+}
+.gift-block__row{
+  display:flex; align-items:center; justify-content:space-between; gap: 10px;
+  background: #fff;
+  border: 1px solid var(--parchment-dark);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.gift-block__value{ font-size: 14px; font-weight:600; letter-spacing:.02em; }
+.copy-btn{
+  background: transparent;
+  border: 1px solid var(--violet);
+  color: var(--violet);
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: 7px 12px;
+  border-radius: 999px;
+  transition: background .3s var(--ease), color .3s var(--ease), transform .2s var(--ease);
+  white-space: nowrap;
+}
+.copy-btn:hover{ background: var(--violet); color: var(--white); }
+.copy-btn.is-copied{ background: var(--gold); border-color: var(--gold); color: var(--ink); transform: scale(1.03); }
+
+/* =====================================================================
+   RSVP
+   ===================================================================== */
+.rsvp__actions{
+  position:relative; z-index:1;
+  display:flex; flex-wrap:wrap; gap: 16px; justify-content:center;
+  margin-top: 10px;
+}
+.rsvp-btn{
+  font-family: var(--font-label);
+  font-size: 13px;
+  letter-spacing: .06em;
+  padding: 15px 30px;
+  border-radius: 999px;
+  display:inline-flex; align-items:center; gap:10px;
+  box-shadow: var(--shadow-soft);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.rsvp-btn:hover{ transform: translateY(-4px); box-shadow: var(--shadow-strong); }
+.rsvp-btn--primary{ background: var(--parchment); color: var(--ink); border: 1px solid var(--gold); }
+.rsvp-btn--whatsapp{ background: #25b26a; color: #fff; }
+.wa-icon{ font-size: 16px; }
+
+/* =====================================================================
+   CIERRE
+   ===================================================================== */
+.closing{
+  position:relative;
+  min-height: 50vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  padding: 60px 20px;
+}
+.closing__text{
+  position:relative; z-index:1;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--parchment);
+  max-width: 360px;
+  margin-bottom: 18px;
+}
+.closing__names{
+  position:relative; z-index:1;
+  font-family: var(--font-script);
+  font-size: 2.4rem;
+  color: var(--gold-soft);
+}
+
+/* =====================================================================
+   EXPLOSIÓN DE PARTÍCULAS (para estado click1 del libro)
+   - Animación ligera, dispersión radial y desvanecimiento.
+   - Desactivada cuando el usuario prefiere reducir movimiento.
+   ===================================================================== */
+.particle-explosion{
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  width: 0; height: 0;
+}
+.particle-explosion::before{
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 40px; height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,236,190,.95) 0%, rgba(255,200,120,.55) 40%, transparent 72%);
+  animation: flash-burst 550ms cubic-bezier(.15,.8,.3,1) forwards;
+}
+@keyframes flash-burst{
+  0%{ transform: scale(0); opacity: 1; }
+  60%{ opacity: .8; }
+  100%{ transform: scale(7); opacity: 0; }
+}
+.particle{
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, rgba(255,240,200,1) 30%, rgba(255,200,120,1) 60%, transparent 100%);
+  opacity: 1;
+  transform: translate3d(0,0,0) scale(1) rotate(0deg);
+  will-change: transform, opacity;
+  box-shadow:
+    0 0 10px 2px rgba(255,214,130,.9),
+    0 0 22px 6px rgba(255,180,90,.55),
+    0 0 40px 10px rgba(232,169,196,.25);
+  animation: particle-move 1250ms cubic-bezier(.12,.75,.28,1) forwards;
+}
+@keyframes particle-move{
+  0%{ transform: translate3d(0,0,0) scale(0.3) rotate(0deg); opacity: 0; }
+  12%{ opacity: 1; transform: translate3d(calc(var(--tx) * .18), calc(var(--ty) * .18), 0) scale(var(--peak-scale, 1.5)) rotate(var(--rot, 90deg)); }
+  100%{ transform: translate3d(var(--tx), var(--ty), 0) scale(.2) rotate(var(--rot-end, 360deg)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .particle{ animation-duration: 200ms !important; opacity: .9 !important; }
+  .lamp-glow{ animation: none !important; }
+}
+
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width: 480px){
+  .book{ aspect-ratio: 4/5; }
+  .nav-scroll{ gap: 6px; padding: 14px; }
+  .nav-item{ padding: 8px 10px; font-size: 9.5px; }
+  .nav-icon{ width: 22px; height: 22px; }
+  .music-btn{ padding: 8px 12px; }
+  .countdown{ gap: 10px; }
+  .countdown__box{ min-width: 74px; padding: 16px 12px; }
+  .countdown__number{ font-size: 1.8rem; }
+  /* Reducir desplazamiento/rotación en pantallas pequeñas */
+  .book-text{
+    --page-tilt: 0deg;
+    --page-shift-x: 0%;
+    --page-shift-y: -5%;
+  }
+}
+
+/* Foco visible para accesibilidad */
+a:focus-visible, button:focus-visible{
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* =====================================================================
+   Reduce vertical space between stacked .section--cards on small screens
+   so two consecutive card sections read as a single block (mobile).
+   ===================================================================== */
+@media (max-width: 780px) {
+  .section--cards {
+    padding: 28px 16px; /* reduce top/bottom so stacked sections don't create large gaps */
+  }
+  /* When two .section--cards are consecutive (ceremonia-recepcion followed by vestimenta-regalos),
+     remove the top padding on the second so the stacked cards flow with the same spacing as the grid gap */
+  .section--cards + .section--cards {
+    padding-top: 0;
+  }
+}
