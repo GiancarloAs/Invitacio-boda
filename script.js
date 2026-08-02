@@ -128,17 +128,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function revealBookText(){
-    const eyebrow = document.querySelector('.book-text__eyebrow');
     const title = document.querySelector('.book-text__title');
     const names = document.querySelector('.book-text__names');
-    if (!eyebrow || eyebrow.dataset.done) return;
+    if (!title || title.dataset.done) return;
 
+    // El eyebrow ("Dos caminos...") quedó oculto visualmente, así que ya no
+    // se le aplica la escritura letra por letra: eso solo restaba tiempo
+    // antes de que el título y los nombres se vean nítidos.
     let cursor = 0.15; // pequeña espera tras abrirse el libro
-    cursor = typeWriteBlur(eyebrow, cursor, 0.026) + 0.25;
     cursor = typeWriteBlur(title, cursor, 0.05) + 0.3;
-    typeWriteBlur(names, cursor, 0.045);
+    const namesEnd = typeWriteBlur(names, cursor, 0.045);
 
-    eyebrow.dataset.done = 'true';
+    title.dataset.done = 'true';
+
+    // Respaldo: si por lentitud del dispositivo/conexión alguna letra se
+    // quedara "pegada" en su estado borroso, se fuerza a que quede nítida
+    // pasado el tiempo máximo que debería tardar la animación.
+    const maxWait = (namesEnd + 0.8) * 1000;
+    setTimeout(() => {
+      document.querySelectorAll('.book-text .blur-char').forEach(span => {
+        span.style.opacity = '1';
+        span.style.filter = 'none';
+      });
+    }, maxWait);
   }
 
   /* =====================================================================
