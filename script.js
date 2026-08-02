@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Si entramos en el estado entreabierto (click1) disparamos partículas
     if (state === 'click1' && !particleShown){
-      spawnParticleExplosion(book, 26);
+      spawnParticleExplosion(book, 44);
       particleShown = true;
     }
   }
@@ -208,13 +208,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const musicLabelEm = musicBtn.querySelector('em');
   const bgMusic = document.getElementById('bg-music');
 
+  // Que la música se repita en bucle mientras el usuario navega la invitación
+  bgMusic.loop = true;
+  bgMusic.volume = 0.6;
+
+  // Si el archivo no carga (nombre incorrecto, ruta equivocada, mayúsculas/minúsculas
+  // no coinciden en el hosting, etc.) avisamos claramente en consola para depurar rápido.
+  bgMusic.addEventListener('error', () => {
+    console.error(
+      'No se pudo cargar Music.mp3. Verifica que el archivo exista en la misma carpeta ' +
+      'que index.html y que el nombre coincida EXACTAMENTE (mayúsculas/minúsculas incluidas), ' +
+      'ya que GitHub Pages distingue entre mayúsculas y minúsculas en los nombres de archivo.'
+    );
+  });
+
   musicBtn.addEventListener('click', () => {
     if (bgMusic.paused){
-      bgMusic.play().catch(err => {
-        console.warn('Error al reproducir audio:', err);
-      });
-      musicBtn.classList.add('is-playing');
-      musicLabelEm.textContent = 'Pausar';
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined){
+        playPromise
+          .then(() => {
+            musicBtn.classList.add('is-playing');
+            musicLabelEm.textContent = 'Pausar';
+          })
+          .catch(err => {
+            console.warn('Error al reproducir audio:', err);
+            musicBtn.classList.remove('is-playing');
+            musicLabelEm.textContent = 'Activar';
+          });
+      }
     } else {
       bgMusic.pause();
       musicBtn.classList.remove('is-playing');
@@ -278,27 +300,36 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < count; i++){
       const p = document.createElement('span');
       p.className = 'particle';
-      // pequeña variación de color para dar calidez
-      const hue = 30 + Math.floor(Math.random() * 40); // 30-70
-      p.style.background = `radial-gradient(circle at 35% 35%, #fff, hsl(${hue} 90% 72% / 1) 30%, hsl(${hue} 80% 56% / 1) 60%, transparent 100%)`;
+      // mayor variación de color, más cálida y dorada para que "brille" más
+      const hue = 25 + Math.floor(Math.random() * 45); // 25-70
+      p.style.background = `radial-gradient(circle at 35% 35%, #fff, hsl(${hue} 95% 75% / 1) 30%, hsl(${hue} 85% 58% / 1) 60%, transparent 100%)`;
       // origen en el centro del wrapper
       p.style.left = '0px';
       p.style.top = '0px';
 
-      // aleatorizar dirección y distancia
+      // aleatorizar dirección y una distancia mayor para un estallido más amplio
       const angle = Math.random() * Math.PI * 2;
-      const distance = 40 + Math.random() * 140; // px
+      const distance = 90 + Math.random() * 260; // px (antes 40-140, ahora bastante más grande)
       const tx = Math.cos(angle) * distance + 'px';
       const ty = Math.sin(angle) * distance + 'px';
       p.style.setProperty('--tx', tx);
       p.style.setProperty('--ty', ty);
 
-      // escalado y delay
-      const scale = 0.6 + Math.random() * 0.9;
-      p.style.transform = `translate3d(0,0,0) scale(${scale})`;
-      p.style.opacity = '1';
+      // rotación aleatoria para que cada partícula gire al salir despedida
+      const rotStart = Math.floor(Math.random() * 60) - 30;
+      const rotEnd = rotStart + 220 + Math.random() * 260;
+      p.style.setProperty('--rot', `${rotStart}deg`);
+      p.style.setProperty('--rot-end', `${rotEnd}deg`);
+
+      // partículas más grandes, con un pico de tamaño más marcado al salir
+      const size = 10 + Math.random() * 12; // 10-22px
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      const peakScale = 1.3 + Math.random() * 0.9; // 1.3-2.2
+      p.style.setProperty('--peak-scale', peakScale.toFixed(2));
+      p.style.opacity = '0';
       // escalonar un poco los inicios para aspecto orgánico
-      const delay = Math.random() * 160; // ms
+      const delay = Math.random() * 200; // ms
       p.style.animationDelay = `${delay}ms`;
 
       explosion.appendChild(p);
@@ -306,10 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     parentEl.appendChild(explosion);
 
-    // limpiar pasado el tiempo de la animación (850ms + margen)
+    // limpiar pasado el tiempo de la animación (1250ms + margen)
     setTimeout(() => {
       explosion.remove();
-    }, 1200);
+    }, 1700);
   }
 
   /* =====================================================================
