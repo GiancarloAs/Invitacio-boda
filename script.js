@@ -11,11 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let bookState = 'closed'; // closed -> hover -> click1 -> open
   let particleShown = false; // mostrar la explosión solo la primera vez
+  let hoverShown = false; // el estado "hover" (book-opening.jpg) ya se mostró alguna vez
+
+  // Dispositivos sin mouse (táctiles): no existe ':hover' real, así que el
+  // estado 2 (book-opening.jpg) se simula con el PRIMER toque en vez de con
+  // el paso del mouse.
+  const noHoverDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
   function setBookState(state){
     bookState = state;
     book.classList.remove('book--closed', 'book--hover', 'book--click1', 'book--open');
     book.classList.add(`book--${state}`);
+
+    if (state === 'hover') hoverShown = true;
 
     // Si entramos en el estado entreabierto (click1) disparamos partículas
     if (state === 'click1' && !particleShown){
@@ -25,15 +33,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Al pasar el mouse: closed -> hover (solo si aún no se ha hecho click)
-  book.addEventListener('mouseenter', () => {
-    if (bookState === 'closed') setBookState('hover');
-  });
-  book.addEventListener('mouseleave', () => {
-    if (bookState === 'hover') setBookState('closed');
-  });
+  // Solo aplica en dispositivos con mouse real.
+  if (!noHoverDevice){
+    book.addEventListener('mouseenter', () => {
+      if (bookState === 'closed') setBookState('hover');
+    });
+    book.addEventListener('mouseleave', () => {
+      if (bookState === 'hover') setBookState('closed');
+    });
+  }
 
-  // Al hacer click: hover/closed -> click1 (entreabierto) -> open (abierto + texto)
+  // Al hacer click/tap: hover/closed -> click1 (entreabierto) -> open (abierto + texto)
   function advanceBook(){
+    // En táctiles, el primer toque muestra el estado "hover" (book-opening.jpg)
+    // en vez de saltar directo a "click1", ya que no hubo mouseenter previo.
+    if (noHoverDevice && bookState === 'closed' && !hoverShown){
+      setBookState('hover');
+      return;
+    }
+
     if (bookState === 'closed' || bookState === 'hover'){
       setBookState('click1');
       openLabel.textContent = 'Seguir abriendo';
@@ -310,17 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
      9) RSVP — placeholders de links (rellenar después)
      ===================================================================== */
   // 👉 Cuando tengas el link del Google Form, reemplaza aquí:
-  const RSVP_FORM_URL = ''; // ej: 'https://forms.gle/xxxxxxxx'
+  const RSVP_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSciAETbETMS7t_6C5MGyXDQYNdO29KBOl4tgESGcxyRe8xTQw/viewform?usp=header';
   const rsvpFormLink = document.getElementById('rsvp-form-link');
   if (RSVP_FORM_URL) rsvpFormLink.href = RSVP_FORM_URL;
-
-  // 👉 Cuando tengas el número, reemplaza aquí (formato: 51XXXXXXXXX):
-  const WHATSAPP_NUMBER = ''; // ej: '51987654321'
-  const WHATSAPP_MESSAGE = 'Hola! Confirmo mi asistencia a la boda de Daniela y Rodrigo 💜';
-  const rsvpWhatsappLink = document.getElementById('rsvp-whatsapp-link');
-  if (WHATSAPP_NUMBER){
-    rsvpWhatsappLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
-  }
 
   // 👉 Cuando tengas los links de Google Maps, reemplaza aquí:
   const MAPS_LINKS = {
