@@ -182,6 +182,7 @@ button{ font-family: inherit; cursor:pointer; }
   text-shadow: 0 1px 2px rgba(255,255,255,.35);
   font-weight: 600;
 }
+.eyebrow-break{ display:none; }
 .book-text__title{
   font-family: var(--font-script);
   font-size: clamp(1.7rem, 6vw, 2.7rem);
@@ -205,10 +206,11 @@ button{ font-family: inherit; cursor:pointer; }
   transition: color .4s var(--ease), text-shadow .4s var(--ease);
 }
 .book-text__names:hover{
-  color: #a8790f;
+  color: #fdf8ec;
   text-shadow:
-    0 0 10px rgba(255,215,0,.7),
-    0 0 24px rgba(255,215,0,.45);
+    0 0 8px rgba(255,255,255,.6),
+    0 0 18px rgba(255,215,0,.75),
+    0 0 34px rgba(255,200,80,.5);
 }
 
 /* Letras que "se escriben" con difuminado al abrir el libro */
@@ -738,6 +740,9 @@ button{ font-family: inherit; cursor:pointer; }
   .countdown{ gap: 10px; }
   .countdown__box{ min-width: 74px; padding: 16px 12px; }
   .countdown__number{ font-size: 1.8rem; }
+  /* En móvil "Dos caminos destinados a encontrarse" se parte en 2 líneas
+     porque en una sola se hace muy larga */
+  .eyebrow-break{ display:block; }
   /* La orientación del texto (inclinación y desplazamiento) se mantiene
      igual que en desktop; solo se ajusta el tamaño de fuente si hace falta. */
 }
