@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =====================================================================
-     6) BOTÓN DE MÚSICA — Audio HTML5 local (Music.mp3)
+     6) BOTÓN DE MÚSICA — Audio HTML5 local (music.mp3)
      Implementación simple para reproducción de archivo local
      ===================================================================== */
   const musicBtn = document.getElementById('music-toggle');
@@ -216,9 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // no coinciden en el hosting, etc.) avisamos claramente en consola para depurar rápido.
   bgMusic.addEventListener('error', () => {
     console.error(
-      'No se pudo cargar Music.mp3. Verifica que el archivo exista en la misma carpeta ' +
-      'que index.html y que el nombre coincida EXACTAMENTE (mayúsculas/minúsculas incluidas), ' +
-      'ya que GitHub Pages distingue entre mayúsculas y minúsculas en los nombres de archivo.'
+      'No se pudo cargar music.mp3. Verifica: 1) que el archivo esté en la MISMA carpeta ' +
+      'que index.html (o ajusta la ruta en el <source src="...">), 2) que el nombre coincida ' +
+      'EXACTAMENTE en mayúsculas/minúsculas (GitHub Pages distingue entre mayúsculas y ' +
+      'minúsculas aunque tu computadora no), y 3) que realmente subiste/hiciste push del ' +
+      'archivo .mp3 al repositorio (no basta con tenerlo local).'
     );
   });
 
