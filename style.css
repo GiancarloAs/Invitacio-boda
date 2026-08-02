@@ -424,7 +424,12 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .section--historia{ background: var(--midnight); }
 .section--countdown, .section--rsvp{ min-height: 70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-.section--cards{ background: var(--midnight-deep); padding: 80px 20px; }
+/* Reduce vertical padding for .section--cards on desktop so consecutive
+   card sections can appear as a single block (keeps spacing similar to cards gap) */
+.section--cards{ background: var(--midnight-deep); padding: 28px 20px; }
+/* If two .section--cards are consecutive, remove the top padding on the second
+   so the inner card-to-card spacing matches the grid gap (28px) */
+.section--cards + .section--cards{ padding-top: 0; }
 
 .section__eyebrow{
   font-family: var(--font-label);
