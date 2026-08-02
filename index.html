@@ -49,6 +49,21 @@
   console.log('[Música] Inicializado. src=' + (bgMusic.currentSrc || bgMusic.querySelector('source').src)
     + ' | networkState=' + bgMusic.networkState + ' | readyState=' + bgMusic.readyState);
 
+  /* Intento de autoplay apenas carga la pantalla del libro (parte 1).
+     Muchos navegadores bloquean el audio con sonido si no hay interacción
+     previa del usuario; si eso pasa, el botón queda listo para activarla
+     con un solo toque/click. */
+  var autoPlayPromise = bgMusic.play();
+  if (autoPlayPromise && typeof autoPlayPromise.then === 'function'){
+    autoPlayPromise.then(function(){
+      musicBtn.classList.add('is-playing');
+      if (musicLabelEm) musicLabelEm.textContent = 'Pausar';
+    }).catch(function(err){
+      console.warn('[Música] Autoplay bloqueado por el navegador (' + err.name + '). '
+        + 'Se necesita un toque/click del usuario para iniciar la música.');
+    });
+  }
+
   bgMusic.addEventListener('error', function(){
     var err = bgMusic.error;
     var codeMsg = err ? ('código ' + err.code) : 'sin detalle';
@@ -81,6 +96,19 @@
       if (musicLabelEm) musicLabelEm.textContent = 'Activar';
     }
   });
+
+  // Respaldo: si el navegador bloqueó el autoplay de arriba, en cuanto el
+  // usuario toque/haga click en cualquier parte de la pantalla del libro
+  // (parte 1), se intenta iniciar la música de inmediato.
+  document.addEventListener('pointerdown', function firstTouchStartsMusic(){
+    if (bgMusic.paused){
+      bgMusic.play().then(function(){
+        musicBtn.classList.add('is-playing');
+        if (musicLabelEm) musicLabelEm.textContent = 'Pausar';
+      }).catch(function(){ /* se ignora, el botón de música sigue disponible */ });
+    }
+    document.removeEventListener('pointerdown', firstTouchStartsMusic);
+  }, { once: true });
 })();
 </script>
 
@@ -105,7 +133,7 @@
 
       <!-- Texto que aparece SOLO cuando el libro está abierto del todo -->
       <div class="book-text">
-        <p class="book-text__eyebrow">Dos caminos destinados a encontrarse</p>
+        <p class="book-text__eyebrow">Dos caminos<br class="eyebrow-break">destinados a encontrarse</p>
         <h1 class="book-text__title">Érase una vez...</h1>
         <p class="book-text__names">Daniela &amp; Rodrigo</p>
       </div>
