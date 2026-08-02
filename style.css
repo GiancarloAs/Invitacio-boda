@@ -124,7 +124,9 @@ button{ font-family: inherit; cursor:pointer; }
   cursor:pointer;
   transition: transform .5s var(--ease);
 }
-.book:hover{ transform: scale(1.015); }
+@media (hover: hover) and (pointer: fine){
+  .book:hover{ transform: scale(1.015); }
+}
 
 .book-img{
   position:absolute; inset:0;
@@ -153,7 +155,7 @@ button{ font-family: inherit; cursor:pointer; }
 
 .book-text{
   /* 📐 Ajustado al ángulo real de la hoja en book-open.jpg */
-  --page-tilt: -11deg;
+  --page-tilt: -12deg;
   --page-tilt-origin: 50% 50%;
   --page-shift-x: -7%;
   --page-shift-y: -9%;
@@ -163,7 +165,7 @@ button{ font-family: inherit; cursor:pointer; }
   text-align:center;
   padding: 40px 30px;
   opacity:0;
-  transform: translate(var(--page-shift-x), var(--page-shift-y)) rotate(var(--page-tilt));
+  transform: translate(calc(var(--page-shift-x) + 2mm), var(--page-shift-y)) rotate(var(--page-tilt));
   transform-origin: var(--page-tilt-origin);
   transition: opacity .5s var(--ease) .15s;
   pointer-events:none;
@@ -548,8 +550,11 @@ button{ font-family: inherit; cursor:pointer; }
 .info-card__body--full{ padding: 30px 26px; }
 
 .event-card__title, .info-card__title{
-  font-family: var(--font-script);
-  font-size: 1.9rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: .01em;
   color: var(--violet);
   margin: 0 0 6px;
 }
@@ -644,8 +649,6 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .rsvp-btn:hover{ transform: translateY(-4px); box-shadow: var(--shadow-strong); }
 .rsvp-btn--primary{ background: var(--parchment); color: var(--ink); border: 1px solid var(--gold); }
-.rsvp-btn--whatsapp{ background: #25b26a; color: #fff; }
-.wa-icon{ font-size: 16px; }
 
 /* =====================================================================
    CIERRE
@@ -735,12 +738,8 @@ button{ font-family: inherit; cursor:pointer; }
   .countdown{ gap: 10px; }
   .countdown__box{ min-width: 74px; padding: 16px 12px; }
   .countdown__number{ font-size: 1.8rem; }
-  /* Reducir desplazamiento/rotación en pantallas pequeñas */
-  .book-text{
-    --page-tilt: 0deg;
-    --page-shift-x: 0%;
-    --page-shift-y: -5%;
-  }
+  /* La orientación del texto (inclinación y desplazamiento) se mantiene
+     igual que en desktop; solo se ajusta el tamaño de fuente si hace falta. */
 }
 
 /* Foco visible para accesibilidad */
