@@ -722,3 +722,18 @@ a:focus-visible, button:focus-visible{
   outline: 2px solid var(--gold);
   outline-offset: 3px;
 }
+
+/* =====================================================================
+   Reduce vertical space between stacked .section--cards on small screens
+   so two consecutive card sections read as a single block (mobile).
+   ===================================================================== */
+@media (max-width: 780px) {
+  .section--cards {
+    padding: 28px 16px; /* reduce top/bottom so stacked sections don't create large gaps */
+  }
+  /* When two .section--cards are consecutive (ceremonia-recepcion followed by vestimenta-regalos),
+     remove the top padding on the second so the stacked cards flow with the same spacing as the grid gap */
+  .section--cards + .section--cards {
+    padding-top: 0;
+  }
+}
