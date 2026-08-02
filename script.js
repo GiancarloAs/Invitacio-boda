@@ -201,50 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =====================================================================
-     6) BOTÓN DE MÚSICA — Audio HTML5 local (music.mp3)
-     Implementación simple para reproducción de archivo local
+     6) BOTÓN DE MÚSICA
+     La lógica de música ahora vive en un <script> propio dentro de
+     index.html, justo después del botón, para que no dependa de que el
+     resto de este archivo cargue sin errores.
      ===================================================================== */
-  const musicBtn = document.getElementById('music-toggle');
-  const musicLabelEm = musicBtn.querySelector('em');
-  const bgMusic = document.getElementById('bg-music');
-
-  // Que la música se repita en bucle mientras el usuario navega la invitación
-  bgMusic.loop = true;
-  bgMusic.volume = 0.6;
-
-  // Si el archivo no carga (nombre incorrecto, ruta equivocada, mayúsculas/minúsculas
-  // no coinciden en el hosting, etc.) avisamos claramente en consola para depurar rápido.
-  bgMusic.addEventListener('error', () => {
-    console.error(
-      'No se pudo cargar music.mp3. Verifica: 1) que el archivo esté en la MISMA carpeta ' +
-      'que index.html (o ajusta la ruta en el <source src="...">), 2) que el nombre coincida ' +
-      'EXACTAMENTE en mayúsculas/minúsculas (GitHub Pages distingue entre mayúsculas y ' +
-      'minúsculas aunque tu computadora no), y 3) que realmente subiste/hiciste push del ' +
-      'archivo .mp3 al repositorio (no basta con tenerlo local).'
-    );
-  });
-
-  musicBtn.addEventListener('click', () => {
-    if (bgMusic.paused){
-      const playPromise = bgMusic.play();
-      if (playPromise !== undefined){
-        playPromise
-          .then(() => {
-            musicBtn.classList.add('is-playing');
-            musicLabelEm.textContent = 'Pausar';
-          })
-          .catch(err => {
-            console.warn('Error al reproducir audio:', err);
-            musicBtn.classList.remove('is-playing');
-            musicLabelEm.textContent = 'Activar';
-          });
-      }
-    } else {
-      bgMusic.pause();
-      musicBtn.classList.remove('is-playing');
-      musicLabelEm.textContent = 'Activar';
-    }
-  });
 
   /* =====================================================================
      7) PÉTALOS FLOTANTES (decoración ambiental) — mayor visibilidad
