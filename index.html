@@ -27,6 +27,63 @@
   <span class="music-label">Música<br><em>Activar</em></span>
 </button>
 
+<script>
+/* =====================================================================
+   MÚSICA — implementación autónoma, no depende de script.js.
+   Se ejecuta apenas el navegador llega a este punto del HTML, ya que
+   el <audio> y el <button> de arriba ya existen en el DOM en ese momento.
+   Si algo falla, queda claramente registrado en la consola (F12).
+   ===================================================================== */
+(function(){
+  var musicBtn = document.getElementById('music-toggle');
+  var bgMusic  = document.getElementById('bg-music');
+
+  if (!musicBtn){ console.error('[Música] No se encontró #music-toggle en el HTML.'); return; }
+  if (!bgMusic){  console.error('[Música] No se encontró #bg-music en el HTML.'); return; }
+
+  var musicLabelEm = musicBtn.querySelector('em');
+
+  bgMusic.loop = true;
+  bgMusic.volume = 0.6;
+
+  console.log('[Música] Inicializado. src=' + (bgMusic.currentSrc || bgMusic.querySelector('source').src)
+    + ' | networkState=' + bgMusic.networkState + ' | readyState=' + bgMusic.readyState);
+
+  bgMusic.addEventListener('error', function(){
+    var err = bgMusic.error;
+    var codeMsg = err ? ('código ' + err.code) : 'sin detalle';
+    console.error('[Música] El archivo de audio no cargó (' + codeMsg + ').');
+    console.error('[Música] Revisa: 1) que "music.mp3" esté en la MISMA carpeta que index.html, '
+      + '2) que el nombre coincida EXACTO en mayúsculas/minúsculas, '
+      + '3) que el archivo haya sido subido (git push) al repositorio, no solo guardado en tu compu.');
+  });
+
+  musicBtn.addEventListener('click', function(){
+    console.log('[Música] Click detectado. paused=' + bgMusic.paused
+      + ' readyState=' + bgMusic.readyState
+      + ' error=' + (bgMusic.error ? bgMusic.error.code : 'ninguno'));
+
+    if (bgMusic.paused){
+      var playPromise = bgMusic.play();
+      if (playPromise && typeof playPromise.then === 'function'){
+        playPromise.then(function(){
+          musicBtn.classList.add('is-playing');
+          if (musicLabelEm) musicLabelEm.textContent = 'Pausar';
+        }).catch(function(err){
+          console.error('[Música] play() fue rechazado: ' + err.name + ' — ' + err.message);
+          musicBtn.classList.remove('is-playing');
+          if (musicLabelEm) musicLabelEm.textContent = 'Activar';
+        });
+      }
+    } else {
+      bgMusic.pause();
+      musicBtn.classList.remove('is-playing');
+      if (musicLabelEm) musicLabelEm.textContent = 'Activar';
+    }
+  });
+})();
+</script>
+
 <!-- ============================================================
      PANTALLA 1 — EL LIBRO (portada / intro)
      4 estados controlados por CSS + JS:
